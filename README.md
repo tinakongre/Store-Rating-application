@@ -104,10 +104,10 @@ Open [http://localhost:5173](http://localhost:5173) in browser.
 
 ##  Demo Accounts
 
- Role  | Email                                           | Password  |
- Admin | [admin@example.com](mail:admin@example.com)     | Admin@123 |
- Owner | [ownerrah@gmail.com](mail:ownerrah@gmail.com)   | Owner@123 |
- User  | [user@gmail.com](mail:user@gmail.com)           | User@123  |
+ 
+ Admin -> [admin@example.com](mail:admin@example.com)    -> password:  Admin@123  |  
+ Owner -> [ownerrah@gmail.com](mail:ownerrah@gmail.com)   -> password:  Owner@123 |
+ User  -> [user@gmail.com](mail:user@gmail.com)           => password: User@123  |
 
 ---
 

@@ -1,0 +1,28 @@
+import express from 'express';
+import Joi from 'joi';
+import { Store, Rating } from '../models.js';
+import { authMiddleware, roleCheck } from './middleware.js';
+const router = express.Router();
+router.get('/stores', async (req,res)=>{
+  const stores = await Store.findAll();
+  const result = await Promise.all(stores.map(async s=>{
+    const ratings = await Rating.findAll({ where: { storeId: s.id } });
+    const avg = ratings.length ? (ratings.reduce((a,b)=>a+b.rating,0)/ratings.length) : 0;
+    return { id:s.id, name:s.name, address:s.address, rating:Number(avg.toFixed(2)) };
+  }));
+  res.json(result);
+});
+const ratingSchema = Joi.object({ rating: Joi.number().integer().min(1).max(5).required() });
+router.post('/stores/:id/rate', authMiddleware, roleCheck(['user']), async (req,res)=>{
+  try{
+    const { error, value } = ratingSchema.validate(req.body);
+    if(error) return res.status(400).json({ error: error.details[0].message });
+    const storeId = req.params.id;
+    const userId = req.user.id;
+    const { rating } = value;
+    const existing = await Rating.findOne({ where: { storeId, userId } });
+    if(existing){ existing.rating = rating; await existing.save(); return res.json(existing); }
+    const r = await Rating.create({ storeId, userId, rating }); return res.json(r);
+  }catch(err){ console.error(err); res.status(500).json({ error:'Server error' }); }
+});
+export default router;

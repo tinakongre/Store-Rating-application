@@ -1,0 +1,160 @@
+import React, { useState, useEffect } from "react";
+import api from "./services/api.js";
+import "bootstrap/dist/css/bootstrap.min.css";
+
+export default function App() {
+  // 🔹 your states (same as before)
+  const [stats, setStats] = useState(null);
+  const [page, setPage] = useState("home");
+  const [token, setToken] = useState(localStorage.getItem("token") || "");
+  const [role, setRole] = useState(localStorage.getItem("role") || "");
+  const [stores, setStores] = useState([]);
+  const [ownerStores, setOwnerStores] = useState([]);
+  const [form, setForm] = useState({});
+  const [login, setLogin] = useState({});
+  const [search, setSearch] = useState("");
+  const [showChangePW, setShowChangePW] = useState(false);
+  const [pwForm, setPwForm] = useState({ oldPassword: "", newPassword: "" });
+  const [users, setUsers] = useState([]);
+  const [userFilters, setUserFilters] = useState({
+    name: "",
+    email: "",
+    address: "",
+    role: "",
+  });
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [owners, setOwners] = useState([]);
+
+  // 🔹 Fetch functions (unchanged, keep all your async logic here)
+  // ...
+
+  return (
+    <div className="container mt-4">
+      {/* Navbar */}
+      <nav className="navbar navbar-expand-lg navbar-dark bg-dark rounded mb-4">
+        <div className="container-fluid">
+          <span className="navbar-brand">🏪 Store Ratings</span>
+          <div className="d-flex gap-2">
+            <button className="btn btn-outline-light" onClick={() => setPage("home")}>Home</button>
+            <button className="btn btn-outline-light" onClick={() => setPage("signup")}>Signup</button>
+            <button className="btn btn-outline-light" onClick={() => setPage("login")}>Login</button>
+            <button className="btn btn-outline-light" onClick={() => setPage("admin")}>Admin</button>
+            <button className="btn btn-outline-light" onClick={() => setPage("owner")}>Owner</button>
+            {token && (
+              <>
+                <button className="btn btn-warning" onClick={() => setShowChangePW(v => !v)}>Change Password</button>
+                <button className="btn btn-danger" onClick={handleLogout}>Logout</button>
+              </>
+            )}
+          </div>
+        </div>
+      </nav>
+
+      {/* Search bar */}
+      <form className="d-flex mb-4" onSubmit={handleSearch}>
+        <input
+          className="form-control me-2"
+          placeholder="Search stores..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <button className="btn btn-primary me-2" type="submit">Search</button>
+        <button className="btn btn-secondary" type="button" onClick={() => { setSearch(""); fetchStores(""); }}>
+          Clear
+        </button>
+      </form>
+
+      {/* Store list */}
+      <h3>📋 Stores</h3>
+      <div className="row">
+        {stores.map((s) => (
+          <div key={s.id} className="col-md-6 mb-3">
+            <div className="card shadow-sm">
+              <div className="card-body">
+                <h5 className="card-title">{s.name}</h5>
+                <p className="card-text text-muted">{s.address}</p>
+                <p><strong>Average:</strong> {s.rating}</p>
+                <p><strong>Your Rating:</strong> {s.myRating ?? "None"}</p>
+                <div>
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button key={n} className="btn btn-sm btn-outline-primary me-2"
+                      onClick={() => submitRating(s.id, n)}>{n}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Admin Dashboard */}
+      {page === "admin" && role === "admin" && (
+        <div className="mt-5">
+          <h3>⚙️ Admin Dashboard</h3>
+          {/* Stats Cards */}
+          {stats && (
+            <div className="row my-3">
+              <div className="col-md-4">
+                <div className="card text-center shadow">
+                  <div className="card-body">
+                    <h5>Total Users</h5>
+                    <p className="fs-4">{stats.userCount}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-4">
+                <div className="card text-center shadow">
+                  <div className="card-body">
+                    <h5>Total Stores</h5>
+                    <p className="fs-4">{stats.storeCount}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-4">
+                <div className="card text-center shadow">
+                  <div className="card-body">
+                    <h5>Total Ratings</h5>
+                    <p className="fs-4">{stats.ratingCount}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Add Store & Users forms (wrap inside cards for clean UI) */}
+          {/* ... keep your Add Store + Add User forms but wrap inside <div className="card p-3 shadow"> */}
+        </div>
+      )}
+
+      {/* Owner Dashboard */}
+      {page === "owner" && role === "owner" && (
+        <div className="mt-5">
+          <h3>📊 My Stores</h3>
+          <div className="row">
+            {ownerStores.map((store) => (
+              <div key={store.id} className="col-md-6 mb-3">
+                <div className="card shadow">
+                  <div className="card-body">
+                    <h5 className="card-title">{store.name}</h5>
+                    <p className="text-muted">{store.address}</p>
+                    <p><strong>Avg Rating:</strong> {store.avgRating ?? "No ratings"}</p>
+                    <h6>👥 Raters</h6>
+                    <ul>
+                      {store.raters?.length ? (
+                        store.raters.map((r, i) => (
+                          <li key={i}>{r.userName}: <b>{r.rating}⭐</b></li>
+                        ))
+                      ) : (
+                        <li>No ratings yet</li>
+                      )}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
